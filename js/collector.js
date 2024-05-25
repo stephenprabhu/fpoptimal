@@ -404,7 +404,7 @@ var Collector = function() {
         this.postData['fp2_webgl'] = calcSHA1(e.data);
       };
 
-      webglworker.postMessage();
+      webglworker.postMessage([]);
 
     }else{
       console.log("no worker. lets do manual")
