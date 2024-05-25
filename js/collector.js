@@ -398,7 +398,7 @@ var Collector = function() {
   this.getWebglFp = function () {
     if (window.Worker) {
       console.log("worker is started")
-      const webglworker = new Worker("webglworker.js");
+      const webglworker = new Worker("/js/webglworker.js");
       webglworker.onmessage = (e) => {
         console.log("worke is done. data is ", e.data)
         this.postData['fp2_webgl'] = calcSHA1(e.data);
