@@ -609,6 +609,47 @@ var Collector = function() {
     return idList;
   }
 
+  this.checkExsitPicture= function(dataURL, id) {
+    var xhttp = new XMLHttpRequest();
+    var url = ip_address + "/check_exist_picture";
+    var hash_value = calcSHA1(dataURL); 
+    var data = "hash_value=" + hash_value;
+    var _this = this;
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        var result = this.responseText;
+        if (result != '1') {
+          _this.storePicture(dataURL, id);
+        } else {
+        }
+      }
+    };
+    xhttp.open("POST", url, true);
+    xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhttp.send(data);
+  }
+
+  // used for sending images back to server
+  this.sendPicture = function(dataURL, id) {
+    this.checkExsitPicture(dataURL, id);
+  }
+
+
+  this.storePicture = function(dataURL, id) {
+    var xhttp = new XMLHttpRequest();
+    var url = ip_address + "/pictures";
+    var data = "imageBase64=" + encodeURIComponent(dataURL); 
+    var _this = this;
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        var hashValue = this.responseText;
+      }
+    };
+    xhttp.open("POST", url, true);
+    xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhttp.send(data);
+  }
+
   this.getPostData = function(cb) {
     let getPRow = addRowToTable("Main Attribs");
     const startTP = Date.now()
@@ -660,7 +701,7 @@ var Collector = function() {
     // Maybe dangerous for later usage
     // ===========================================
     var cvs_dataurl = cvs_test.toDataURL('image/png', 1.0);
-    // this.sendPicture(cvs_dataurl, 2);
+    this.sendPicture(cvs_dataurl, 2);
 
     this.postData['canvastest'] = calcSHA1(cvs_dataurl);
     this.postData['cpucores'] = this.getCPUCores();
