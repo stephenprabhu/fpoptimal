@@ -403,6 +403,9 @@ var Collector = function() {
         console.log("worke is done. data is ", e.data)
         this.postData['fp2_webgl'] = calcSHA1(e.data);
       };
+
+      webglworker.postMessage();
+
     }else{
       console.log("no worker. lets do manual")
       this.postData['fp2_webgl'] = calcSHA1(getWebWorkerWebglfp());
