@@ -1,4 +1,9 @@
-function getWebWorkerWebglfp(){
+// function getWebWorkerWebglfp(){
+    
+// }   
+
+
+onmessage = (e) => {
     var gl;
     var fa2s = function (fa) {
       gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -128,13 +133,9 @@ function getWebWorkerWebglfp(){
     result.push('webgl fragment shader low int precision:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_INT).precision);
     result.push('webgl fragment shader low int precision rangeMin:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_INT).rangeMin);
     result.push('webgl fragment shader low int precision rangeMax:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_INT).rangeMax);
-    return result.join('~');
-}   
-
-
-onmessage = (e) => {
-    const res = getWebWorkerWebglfp();
-    postMessage(res);
+    // return ;
+    // const res = getWebWorkerWebglfp();
+    postMessage(result.join('~'));
 };
     
    
