@@ -74,46 +74,42 @@ var Collector = function() {
   this.nothing = function() {}
 
   // get the cookie and unique_label for this record
-  this.handleCookie = function() {
-    console.log("wanna start?")
+  this.handleCookie = async function() {
     function getCookie(cname) {
-      var name = cname + "=";
-      var decodedCookie = decodeURIComponent(document.cookie);
-      var ca = decodedCookie.split(';');
-      for(var i = 0; i <ca.length; i++) {
-        var c = ca[i];
-        while (c.charAt(0) == ' ') {
-          c = c.substring(1);
-        }
-        if (c.indexOf(name) == 0) {
-          return c.substring(name.length, c.length);
-        }
+      const name = cname + "=";
+      const decodedCookie = decodeURIComponent(document.cookie);
+      const ca = decodedCookie.split(';');
+      for (let c of ca) {
+        c = c.trim();
+        if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
       }
       return "";
     }
-
-    var this_cookie = getCookie("dynamic_fingerprinting");
-    var xhttp = new XMLHttpRequest();
-    var url = ip_address + "/getCookie";
-    var data = "cookie=" + this_cookie; 
-    var _this = this;
-    xhttp.onreadystatechange = function() {
-      if (this.readyState == 4 && this.status == 200) {
-        var res = this.responseText.split(',');
-        var new_cookie = res[1];
-        document.cookie = "dynamic_fingerprinting=" + new_cookie + ";expires=Fri, 31 Dec 2020 23:59:59 GMT";
+  
+    const this_cookie = getCookie("dynamic_fingerprinting");
+    const url = `${ip_address}/getCookie`;
+    const data = `cookie=${this_cookie}`;
+  
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: encodeURI(data)
+      });
+      if (response.ok) {
+        const res = (await response.text()).split(',');
+        const new_cookie = res[1];
+        document.cookie = `dynamic_fingerprinting=${new_cookie};expires=Fri, 31 Dec 2020 23:59:59 GMT`;
         _this.postData["label"] = new_cookie;
         _this.unique_label = res[0];
         recordID = res[0];
-        // after we set the cookie, call the main function
-        // make sure we set the unique_label and cookie first
-        _this.getPostData(_this.nothing());
+        _this.getPostData();
       }
-    };
-    xhttp.open("POST", url, true);
-    xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhttp.send(encodeURI(data));
+    } catch (error) {
+      console.error('Error handling cookie:', error);
+    }
   }
+  
 
   // get touch support
   // from fingerprintjs2
@@ -168,12 +164,8 @@ var Collector = function() {
 
   // get the screen resolution
   this.getResolution = function() {
-    var zoom_level = detectZoom.device();
-    var fixed_width = window.screen.width * zoom_level;
-    var fixed_height = window.screen.height * zoom_level;
-    return Math.round(fixed_width / fixed_height * 100) / 100;
-    // var res = Math.round(fixed_width) + '_' + Math.round(fixed_height) + '_' + zoom_level + '_' + window.screen.width+"_"+window.screen.height+"_"+window.screen.colorDepth+"_"+window.screen.availWidth + "_" + window.screen.availHeight + "_" + window.screen.left + '_' + window.screen.top + '_' + window.screen.availLeft + "_" + window.screen.availTop + "_" + window.innerWidth + "_" + window.outerWidth + "_" + detectZoom.zoom();
-    // return res;
+    const { width, height } = window.screen;
+    return (width / height).toFixed(2);
   }
 
 
@@ -609,47 +601,30 @@ var Collector = function() {
     return idList;
   }
 
-  this.checkExsitPicture= function(dataURL, id) {
-    var xhttp = new XMLHttpRequest();
-    var url = ip_address + "/check_exist_picture";
-    var hash_value = calcSHA1(dataURL); 
-    var data = "hash_value=" + hash_value;
-    var _this = this;
-    xhttp.onreadystatechange = function() {
-      if (this.readyState == 4 && this.status == 200) {
-        var result = this.responseText;
-        if (result != '1') {
-          _this.storePicture(dataURL, id);
-        } else {
-        }
+  this.sendPicture = async function(dataURL, id) {
+    const hash_value = calcSHA1(dataURL);
+    const checkUrl = `${ip_address}/check_exist_picture`;
+    const storeUrl = `${ip_address}/pictures`;
+  
+    try {
+      const checkResponse = await fetch(checkUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `hash_value=${hash_value}`
+      });
+  
+      if (checkResponse.ok && (await checkResponse.text()) !== '1') {
+        await fetch(storeUrl, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: `imageBase64=${encodeURIComponent(dataURL)}`
+        });
       }
-    };
-    xhttp.open("POST", url, true);
-    xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhttp.send(data);
+    } catch (error) {
+      console.error('Error sending picture:', error);
+    }
   }
-
-  // used for sending images back to server
-  this.sendPicture = function(dataURL, id) {
-    this.checkExsitPicture(dataURL, id);
-  }
-
-
-  this.storePicture = function(dataURL, id) {
-    var xhttp = new XMLHttpRequest();
-    var url = ip_address + "/pictures";
-    var data = "imageBase64=" + encodeURIComponent(dataURL); 
-    var _this = this;
-    xhttp.onreadystatechange = function() {
-      if (this.readyState == 4 && this.status == 200) {
-        var hashValue = this.responseText;
-      }
-    };
-    xhttp.open("POST", url, true);
-    xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhttp.send(data);
-  }
-
+  
   this.getPostData = function(cb) {
     let getPRow = addRowToTable("Main Attribs");
     const startTP = Date.now()
@@ -742,23 +717,26 @@ var Collector = function() {
     }
 
     //update one feature asynchronously to the server
-    this.updateFeatures = function(features){
+    this.updateFeatures = async function(features) {
       features['uniquelabel'] = this.unique_label;
-      console.log(features);
-
-      var xhttp = new XMLHttpRequest();
-      var url = ip_address + "/updateFeatures";
-      var data = JSON.stringify(features) 
-        xhttp.onreadystatechange = function() {
-          if (this.readyState == 4 && this.status == 200) {
-            var data = JSON.parse(this.responseText);
-            console.log(data);
-          }
-        };
-      xhttp.open("POST", url, true);
-      xhttp.setRequestHeader('Content-Type', 'application/json');
-      xhttp.send(data);
+      const url = `${ip_address}/updateFeatures`;
+      const data = JSON.stringify(features);
+    
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: data
+        });
+        if (response.ok) {
+          const responseData = await response.json();
+          console.log(responseData);
+        }
+      } catch (error) {
+        console.error('Error updating features:', error);
+      }
     }
+    
     const endTP = Date.now()
     getPRow = addDataToRow(getPRow, endTP);
     getPRow= addDataToRow(getPRow, endTP - startTP);

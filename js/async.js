@@ -47,7 +47,7 @@ var AsyncTest = function(collector, cb) {
   this.testResults = {};
 
   this.testFinished = function(ID, value) {
-    _this.collector.checkExsitPicture(value, ID);
+    _this.collector.sendPicture(value, ID);
     var img_hash = calcSHA1(value);
     _this.testResults[ID] = img_hash;
 
