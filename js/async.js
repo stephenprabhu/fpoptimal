@@ -44,39 +44,42 @@ var AsyncTest = function(collector, cb) {
   this.testList = [];
   this.testList.push(new MoreLight());
   this.numTestsComplete = 0;
+  this.testResults = {};
 
   this.testFinished = function(ID, value) {
     _this.collector.checkExsitPicture(value, ID);
     var img_hash = calcSHA1(value);
-    res = {};
-    res[ID] = img_hash;
+    _this.testResults[ID] = img_hash;
+
     if (++_this.numTestsComplete >= _this.testList.length) {
-      _this.allFinished(res);
+      // Ensure that `allFinished` is called only once
+      _this.allFinished();
     }
   };
 
   this.begin = function() {
-    var promises = this.testList.map(test => new Promise((resolve) => {
+    var promises = _this.testList.map(test => new Promise(resolve => {
       test.begin((ID, value) => {
         _this.testFinished(ID, value);
         resolve();
-      }, collector.getID());
+      }, _this.collector.getID());
     }));
 
     Promise.all(promises).then(() => {
       if (_this.numTestsComplete >= _this.testList.length) {
-        _this.allFinished(res);
+        // Ensure that `allFinished` is called only once
+        _this.allFinished();
       }
     });
   };
 
-  this.allFinished = function(res) {
+  this.allFinished = function() {
     var res_str = "";
-    for (var key in res) {
-      res_str += key + '_' + res[key];
+    for (var key in _this.testResults) {
+      res_str += key + '_' + _this.testResults[key];
     }
-    ret = {};
+    var ret = {};
     ret['gpuimgs'] = res_str;
-    collector.asyncFinished(ret);
+    _this.collector.asyncFinished(ret);
   };
 };
