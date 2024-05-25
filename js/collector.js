@@ -22,7 +22,7 @@ function addDataToRow(row, data){
 
 
 
-ip_address = "https://fpoptimal-laravel.stephenprabhu.com";
+ip_address = "https://fpoptimal-laravel.stephenprabhu.com/api";
 var Collector = function() {
   this.finalized = false;
   // all kinds of features
