@@ -20,7 +20,7 @@ function addDataToRow(row, data){
   return row;
 }
 
-const ip_address = "https://research-be.stephenprabhu.com/api";
+const ip_address = "https://research-be.stephenprabhu.com";
 
 
 var finishPage = function() {
