@@ -2,7 +2,8 @@
 // always same as collector.unique_label
 var recordID = "";
 let startTimeAsync;
-
+let mainRow;
+let mainRowStartTime;
 
 //custom funcitons
 function addRowToTable(name){
@@ -19,11 +20,34 @@ function addDataToRow(row, data){
   return row;
 }
 
+const ip_address = "https://research-be.stephenprabhu.com/api";
+
+
+var finishPage = function() {
+  var xhttp = new XMLHttpRequest();
+  var url = ip_address + "/finishPage";
+  var data = "recordID=" + recordID; 
+  var _this = this;
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      const mainRowEndTime = Date.now();
+      addDataToRow(mainRow, mainRowEndTime);
+      addDataToRow(mainRow, mainRowEndTime - mainRowStartTime);
+      console.log(this.responseText);
+    }
+  };
+  xhttp.open("POST", url, true);
+  xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  xhttp.send(data);
+}
 
 
 
-ip_address = "https://fpoptimal-laravel.stephenprabhu.com/api";
+
 var Collector = function() {
+  mainRow = addRowToTable("Total time");
+  mainRowStartTime = Date.now();
+  mainRow = addDataToRow(mainRow, mainRowStartTime);
   this.finalized = false;
   // all kinds of features
   // add more later
