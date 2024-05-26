@@ -731,6 +731,7 @@ var Collector = function() {
       asyncRow = addDataToRow(asyncRow, endTimeAsync - startTimeAsync);
       asyncRow = addDataToRow(asyncRow, JSON.stringify(res).length );
       this.updateFeatures(res);
+      finishPage();
     }
     if (this.postData['WebGL'] == true){
       asyncTest = new AsyncTest(this);
